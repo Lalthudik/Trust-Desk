@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Trust Desk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+    }
+
+    nav {
+      background: #0a66c2;
+      padding: 15px;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #0a66c2;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #004182;
+    }
+
+    .rating {
+      color: orange;
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<nav>Trust Desk 🇮🇳</nav>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Write a Review</h2>
+    <input type="text" id="businessName" placeholder="Business Name" required>
+    <select id="rating">
+      <option value="5">★★★★★ (5)</option>
+      <option value="4">★★★★ (4)</option>
+      <option value="3">★★★ (3)</option>
+      <option value="2">★★ (2)</option>
+      <option value="1">★ (1)</option>
+    </select>
+    <textarea id="reviewText" placeholder="Write your review..." rows="4"></textarea>
+    <button onclick="addReview()">Submit Review</button>
+  </div>
+
+  <h2>Latest Reviews</h2>
+  <div id="reviews"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.addReview = async function() {
+  const business = document.getElementById("businessName").value;
+  const rating = document.getElementById("rating").value;
+  const text = document.getElementById("reviewText").value;
+
+  if (!business || !text) {
+    alert("Fill all fields");
+    return;
+  }
+
+  await addDoc(collection(db, "reviews"), {
+    business,
+    rating,
+    text,
+    createdAt: new Date()
+  });
+
+  alert("Review submitted!");
+  location.reload();
+};
+
+async function loadReviews() {
+  const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
+  const querySnapshot = await getDocs(q);
+
+  let reviewDiv = document.getElementById("reviews");
+  reviewDiv.innerHTML = "";
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    reviewDiv.innerHTML += `
+      <div class="card">
+        <h3>${data.business}</h3>
+        <p class="rating">${"★".repeat(data.rating)}</p>
+        <p>${data.text}</p>
+      </div>
+    `;
+  });
+}
+
+loadReviews();
+
+</script>
+
+</body>
+</html>
